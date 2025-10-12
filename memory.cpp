@@ -38,6 +38,27 @@ void Ram::zeroOut(){
     zeroOut(0x00, memory_size);
 }
 
+Register::Register(){
+    byte_data = 0;
+    address_data = 0;
+};
+
+byte Register::read_byte(){
+    return byte_data;
+}
+
+address Register::read_address(){
+    return address_data;
+}
+
+void Register::write_byte(byte data){
+    byte_data = data;
+}
+
+void Register::write_address(address data){
+    address_data = data;
+}
+
 address bytestoAddress(byte lsb, byte msb){
     address lsb_push_back = lsb << 8;
     address lsb_and_msb = lsb_push_back | msb;

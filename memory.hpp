@@ -5,9 +5,13 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <stack>
+#include <string>
 
 typedef uint8_t byte;
 typedef uint16_t address;
+
+
 
 class Ram {
     public:
@@ -28,6 +32,23 @@ class Ram {
         int memory_size;
         byte zero = 0x00;
 
+};
+
+class Register{
+    public:
+
+    Register();
+
+    byte read_byte();
+    address read_address();
+    void write_byte(byte data);
+    void write_address(address data);
+
+    private:
+    byte byte_data;
+    address address_data;
+
+    
 };
 
 std::ostream & operator<<(std::ostream &os, const byte &data);
