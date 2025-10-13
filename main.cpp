@@ -46,28 +46,40 @@ void setFont(Ram* ram){
     font.insert(font.end(), B);
 
     std::vector<byte> C = {0xF0, 0x80, 0x80, 0x80, 0xF0}; //C
+    font.insert(font.end(), C);
+
     std::vector<byte> D = {0xE0, 0x90, 0x90, 0x90, 0xE0}; //D
+    font.insert(font.end(), D);
+
     std::vector<byte> E = {0xF0, 0x80, 0xF0, 0x80, 0xF0}; //E
+    font.insert(font.end(), E);
+
     std::vector<byte> F = {0xF0, 0x80, 0xF0, 0x80, 0x80}; //F
+    font.insert(font.end(), F);
 
-    address starting_memory_address = 0x050; //Sticking with standard font location
+    address memory_address = 0x050; //Sticking with standard font location
 
+    for (int i = 0; i < font.size(); ++i){
+        for (int j = 0; j < font[i].size(); ++j){
+            ram->write_address(memory_address, font[i][j]);
+            memory_address += 1;
+        }
+    }
     
 
 }
 
-void addFonttoMemory(std::vector<byte> data, address* memory_address, Ram* ram){
-    for (int i = 0;  i < 5; ++i){
-        ram->write_address(*memory_address, data[i]);
-        *memory_address += 1;   
-    }
-} 
 
 
 int main(){
     Ram memory(4096);
 
     std::stack<address> st;
+
+    setFont(&memory);
+
+    
+    
     
     return 0;
 }

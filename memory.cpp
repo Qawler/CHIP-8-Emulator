@@ -20,7 +20,7 @@ byte Ram::read_address(address address) const{
     return memory[address];
 }
 
-std::vector<byte> Ram::read_addresses(address start_address, address end_address){
+std::vector<byte> Ram::read_addresses(address start_address, address end_address) const{
     std::vector<byte> data_list;
     for (address i = start_address; i < end_address; i += 1){
         data_list.push_back(read_address(i));
@@ -78,5 +78,12 @@ address bytestoAddress(byte lsb, byte msb){
 
 std::ostream & operator<<(std::ostream &os, const byte &data){
     return os << std::showbase << std::hex << static_cast<int>(data);
+}
+
+std::ostream & operator<<(std::ostream &os, const std::vector<byte> &data){
+    for (int i = 0; i < data.size(); ++i){
+        os << std::hex << data[i] << " ";
+    }
+    return os;
 }
 

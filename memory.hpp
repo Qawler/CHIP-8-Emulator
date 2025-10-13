@@ -21,7 +21,7 @@ class Ram {
 
         int get_memory_size();
         byte read_address(address location) const;
-        std::vector<byte> read_addresses(address start_location, address end_location);
+        std::vector<byte> read_addresses(address start_location, address end_location) const;
         void write_address(address location, byte data);
         void write_addresses(address start_location, address end_location, byte data);   
 
@@ -53,6 +53,7 @@ class Register{
 };
 
 std::ostream & operator<<(std::ostream &os, const byte &data);
+std::ostream & operator<<(std::ostream &os, const std::vector<byte> &data);
 
 address bytestoAddress(byte lsb, byte msb);
 
