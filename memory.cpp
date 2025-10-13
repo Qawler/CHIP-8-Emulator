@@ -20,6 +20,14 @@ byte Ram::read_address(address address) const{
     return memory[address];
 }
 
+std::vector<byte> Ram::read_addresses(address start_address, address end_address){
+    std::vector<byte> data_list;
+    for (address i = start_address; i < end_address; i += 1){
+        data_list.push_back(read_address(i));
+    }
+    return data_list;
+}
+
 void Ram::write_address(address address, byte data){
     memory[address] = data;
 }

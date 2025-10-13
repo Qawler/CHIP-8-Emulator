@@ -21,6 +21,7 @@ class Ram {
 
         int get_memory_size();
         byte read_address(address location) const;
+        std::vector<byte> read_addresses(address start_location, address end_location);
         void write_address(address location, byte data);
         void write_addresses(address start_location, address end_location, byte data);   
 
