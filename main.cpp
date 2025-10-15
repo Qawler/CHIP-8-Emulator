@@ -1,6 +1,8 @@
 #include "memory.hpp"
 
+#include <SDL3/SDL.h>
 #include <stack>
+
 
 
 void setFont(Ram* ram){
