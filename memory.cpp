@@ -47,8 +47,8 @@ void Ram::zeroOut(){
 }
 
 Register::Register(){
-    byte_data = 0;
-    address_data = 0;
+    byte_data = 0; //Unintialized value
+    address_data = 0; //Unintialized value
 };
 
 byte Register::read_byte(){
@@ -69,8 +69,8 @@ void Register::write_address(address data){
 
 address bytestoAddress(byte lsb, byte msb){
     address lsb_push_back = lsb << 8;
-    address lsb_and_msb = lsb_push_back | msb;
-    address mask = 0x0FFF;
+    address lsb_and_msb = lsb_push_back | msb; 
+    address mask = 0x0FFF; //Bit mask for only 3 hex values as max memory value is 4096
     address new_address = mask & lsb_and_msb;
 
     return new_address;
