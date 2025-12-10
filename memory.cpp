@@ -12,7 +12,7 @@ Ram::Ram(int size){
     }
 }
 
-int Ram::get_memory_size(){
+int Ram::get_memory_size() const{
     return memory_size;
 }
 

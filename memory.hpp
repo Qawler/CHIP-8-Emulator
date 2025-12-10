@@ -11,15 +11,13 @@
 typedef uint8_t byte;
 typedef uint16_t address;
 
-
-
 class Ram {
     public:
         Ram();
 
         Ram(int size);
 
-        int get_memory_size();
+        int get_memory_size() const;
         byte read_address(address location) const;
         std::vector<byte> read_addresses(address start_location, address end_location) const;
         void write_address(address location, byte data);

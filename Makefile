@@ -4,5 +4,5 @@ CXXFLAGS ?= --std=c++17 -Wall -Werror -pedantic -g -Wno-sign-compare -Wno-commen
 
 LDLIBS += -lSDL3
 
-main.exe: main.cpp memory.cpp
+chip8.exe: chip8.cpp memory.cpp
 	$(CXX) $(CXXFLAGS) $^ $(LDLIBS) -o $@
