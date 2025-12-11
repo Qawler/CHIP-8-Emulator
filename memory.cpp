@@ -77,7 +77,7 @@ address bytestoAddress(byte lsb, byte msb){
 }
 
 std::ostream & operator<<(std::ostream &os, const byte &data){
-    return os << std::showbase << std::hex << static_cast<int>(data);
+    return os << std::hex << static_cast<int>(data);
 }
 
 std::ostream & operator<<(std::ostream &os, const std::vector<byte> &data){

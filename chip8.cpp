@@ -37,7 +37,7 @@ int main(int argc, char* args[]){
 
     std::string program_name = args[1];
 
-    std::ifstream fin(program_name, std::ios::binary);
+    std::ifstream fin(program_name, std::ios::binary | std::ios::ate);
     if(!fin.is_open()){
         std::cout << "Error: Couldn't open file" << std::endl;
         return 1;

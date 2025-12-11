@@ -32,8 +32,12 @@ struct opcode {
 
 void read_file(std::ifstream &fin);
 
-opcode fetch();
+//opcode fetch();
 
 void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory);
+
+std::ostream & operator<<(std::ostream &os, const opcode &data);
+
+std::ostream & operator<<(std::ostream &os, const std::vector<opcode> &data);
 
 #endif
