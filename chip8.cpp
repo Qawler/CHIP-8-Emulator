@@ -12,6 +12,14 @@ const int WINDOW_HEIGHT = 32 * window_factor;
 const double instruction_freq = 1.0 / 700; //Run at 700 Hz
 const double timer_freq = 1.0 / 60; //Run at 60 Hz;
 
+byte delay_timer = 0x0; //Decrements at 60 Hz
+
+byte sound_timer = 0x0; //Beeps at 0;
+
+std::vector<std::vector<bool>> keys; //Matrix of bools representing keys pressed
+
+std::vector<std::vector<bool>> pixels; //Matrix of bools representing all pixels
+
 struct SDLState {
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -24,9 +32,6 @@ void video_cleanup(SDLState &state);
 void do_instruction();
 
 void update_timers();
-
-
-
 
 int main(int argc, char* args[]){
 
@@ -43,7 +48,9 @@ int main(int argc, char* args[]){
         return 1;
     }
 
-    read_file(fin);
+    Ram memory(4096);
+
+    read_file(fin, &memory);
 
     SDLState state;
 
@@ -66,9 +73,9 @@ int main(int argc, char* args[]){
         return 1;
     }
     
-    Ram memory(4096);
-
     setFont(&memory);
+
+    //fetch(&memory);
 
     auto last_clock_time = std::chrono::high_resolution_clock::now();
 
@@ -106,7 +113,6 @@ int main(int argc, char* args[]){
                     running = false;
                     break;
                 }
-
             }
         }
 
