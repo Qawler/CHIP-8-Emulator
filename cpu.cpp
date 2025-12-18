@@ -1,11 +1,12 @@
 #include "cpu.hpp"
 #include <iomanip>
 
+
 address pc = 0x0; //Program counter
 
-address index = 0x0; //Index counter
+address index_reg = 0x0; //Index counter
 
-std::array<int, 16> var_regs = {0}; //Variable registers
+std::array<byte, 16> var_regs = {0}; //Variable registers
 
 std::stack<address> program_stack;
 
@@ -23,8 +24,7 @@ void read_file(std::ifstream &fin, Ram *memory){
 
     pc = 0x200;
 
-    for (int i = 1; i < buffer.size() + 1; ++i){
-        std::cout << buffer[i] << std::endl;
+    for (int i = 0; i < buffer.size() + 1; ++i){
         memory->write_address(pc, buffer[i]);
         ++pc;  
     }
@@ -35,20 +35,33 @@ void read_file(std::ifstream &fin, Ram *memory){
 opcode fetch(Ram *memory){
     opcode op;
     op.MSB = memory->read_address(pc);
-    std::cout << "MSB: " << op.MSB << std::endl;
     ++pc;
     op.LSB = memory->read_address(pc);
-    std::cout << "LSB: " << op.LSB << std::endl;
+    ++pc;
 
-    std::cout << op << std::endl;
-    address NNN = op.NNN;
-    std::cout << std::hex << NNN << std::endl;
+    op.apply_bitmask();
 
     return op;   
 }
 
-void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory, std::vector<std::vector<bool>> &keys, byte &delay_timer, byte &sound_timer){
+void print_data(){
+    std::cout << "Program Counter: " << std::hex << pc << std::endl;
+    std::cout << "Index Register: " << std::hex << index_reg << std::endl;
+    std::cout << "V Registers: [";
+    for (int i = 0; i < 15; ++i){
+        std::cout << var_regs[i] << ", "; 
+    }
+    std::cout << var_regs[15] << "]" << std::endl; 
+}
+
+void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory, std::map<SDL_Scancode, bool> &keys, byte &delay_timer, byte &sound_timer){
     opcode current_instruction = fetch(memory);
+
+    std::cout << "Running Op: " << std::hex << current_instruction << std::endl;
+
+    if ((current_instruction.MSB == 0x00) && (current_instruction.LSB == 0x00)){
+        return ;
+    }
 
     switch (current_instruction.first_nibble){
         case 0x0:
@@ -66,24 +79,28 @@ void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory
         case 0x5:
             break;
         case 0x6:
+            six_instr(current_instruction);
             break;
         case 0x7:
+            seven_instr(current_instruction);
             break;
         case 0x8:
             break;
         case 0x9:
             break;
-        case 0xA:
+        case 0xa:
+            a_instr(current_instruction);
             break;
-        case 0xB:
+        case 0xb:
             break;
-        case 0xC:
+        case 0xc:
             break;
-        case 0xD:
+        case 0xd:
+            d_instr(current_instruction, memory, video_memory);
             break;
-        case 0xE:
+        case 0xe:
             break;
-        case 0xF:
+        case 0xf:
             break;  
     }
 }
@@ -105,8 +122,8 @@ std::ostream & operator<<(std::ostream &os, const std::vector<opcode> &data){
 void zero_instr(opcode &op, Ram *memory, std::vector<std::vector<bool>> &video_memory){
     switch(op.fourth_nibble){
         case 0x0:
-            for (int i = 0; i < video_memory.size(); ++i){
-                for (int j = 0; j < video_memory[i].size(); ++j){
+            for (int i = 0; i < 32; ++i){
+                for (int j = 0; j < 64; ++j){
                     video_memory[i][j] = false;
                 }
             }
@@ -130,4 +147,38 @@ void six_instr(opcode &op){
 
 void seven_instr(opcode &op){
     var_regs[op.second_nibble] += op.LSB;
+}
+
+void a_instr(opcode &op){
+    index_reg = op.NNN;
+}
+
+void d_instr(opcode &op, Ram *memory, std::vector<std::vector<bool>> &video_memory){
+    byte x = var_regs[op.second_nibble] % 64;
+    byte y = var_regs[op.third_nibble] % 32;
+    byte n = op.fourth_nibble;
+
+    //std::cout << "Draw Op" << std::endl;
+
+    for (int i = 0; i < n; ++i){ //Iterate through height of sprite
+        byte sprite = memory->read_address(index_reg + i);
+        if ((y + i) > 32){
+            break;
+        }
+        for (int j = 7; j >= 0; --j){ //Iterate through each bit in sprite
+            int bit_value = (sprite >> j) & 1;  
+            if (x + j > 64){
+                continue;
+            }
+            else if (bit_value && (video_memory[y + i][x + j])){
+                video_memory[y + i][x + j] = false;
+                var_regs[0xF] = 1;
+            }
+            else if (bit_value && (!video_memory[y + i][x + j])){
+                video_memory[y + i][x + j] = true; 
+            }
+            //std::cout << "Sprite: " << sprite << ", Mask: " << bit_value << ", VX: "<< x << ", VY: " << y << ", (X, Y): (" << x + j << ", " << y + i << "), Pixel Value: " << video_memory[y + i][x + j] << std::endl;
+        }    
+    }
+    
 }

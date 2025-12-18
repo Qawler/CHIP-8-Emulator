@@ -8,6 +8,8 @@
 #include <string>
 #include <array>
 #include <stack>
+#include <map>
+#include <SDL3/SDL_scancode.h>
 
 #include "memory.hpp"
 
@@ -15,29 +17,41 @@ typedef uint8_t byte;
 
 struct opcode {
     private:
-        byte front_mask = 0xF0;
-        byte back_mask = 0x0F;
+        byte front_mask = 0xf0;
+        byte back_mask = 0x0f;
         byte add_zero = 0x00;
+
 
     public: 
 
         byte MSB = 0x00;
         byte LSB = 0x00;
     
+        byte first_nibble = 0x00;
+        byte second_nibble = 0x00;
+        byte third_nibble = 0x00;
+        byte fourth_nibble = 0x00;
 
-        byte first_nibble = (MSB & front_mask) >> 4;
-        byte second_nibble = (MSB & back_mask);
-        byte third_nibble = (LSB & front_mask) >> 4;
-        byte fourth_nibble = (LSB & back_mask);
+        address NNN = 0x00;
+ 
 
-        address NNN = (add_zero << 24) | (second_nibble << 16) | (third_nibble << 8) | fourth_nibble;
+        void apply_bitmask(){
+            first_nibble = (MSB & front_mask) >> 4;
+            second_nibble = (MSB & back_mask);
+            third_nibble = (LSB & front_mask) >> 4;
+            fourth_nibble = (LSB & back_mask);
+
+            NNN = (second_nibble << 8) | (third_nibble << 4) | fourth_nibble;
+        }
 };
 
 void read_file(std::ifstream &fin, Ram *memory);
 
 opcode fetch(Ram *memory);
 
-void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory, std::vector<std::vector<bool>> &keys, byte &delay_timer, byte &sound_timer);
+void print_data();
+
+void decode_and_excute(Ram *memory, std::vector<std::vector<bool>> &video_memory, std::map<SDL_Scancode, bool> &keys, byte &delay_timer, byte &sound_timer);
 
 std::ostream & operator<<(std::ostream &os, const opcode &data);
 
@@ -50,5 +64,9 @@ void one_instr(opcode &op);
 void six_instr(opcode &op);
 
 void seven_instr(opcode &op);
+
+void a_instr(opcode &op);
+
+void d_instr(opcode &op, Ram *memory, std::vector<std::vector<bool>> & video_memory);
 
 #endif

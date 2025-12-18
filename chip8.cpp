@@ -5,6 +5,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+
 const int window_factor = 20;
 const int WINDOW_WIDTH = 64 * window_factor;
 const int WINDOW_HEIGHT = 32 * window_factor;
@@ -15,8 +16,6 @@ const double timer_freq = 1.0 / 60; //Run at 60 Hz;
 byte delay_timer = 0x0; //Decrements at 60 Hz
 
 byte sound_timer = 0x0; //Beeps at 0;
-
-std::vector<std::vector<bool>> keys; //Matrix of bools representing keys pressed
 
 std::vector<std::vector<bool>> pixels; //Matrix of bools representing all pixels
 
@@ -33,11 +32,21 @@ void do_instruction();
 
 void update_timers();
 
+void print_video_memory();
+
+void draw(SDLState &state);
+
+bool debug_mode = false;
+
 int main(int argc, char* args[]){
 
-    if (argc != 2){
-        std::cout << "Error: Not Enough Arguments. Usage ./chip8.exe [program file]" << std::endl;
+    if ((argc < 2) || (argc > 3)){
+        std::cout << "Error: Not Enough Arguments. Usage ./chip8.exe program_file {debug}" << std::endl;
         return 1;
+    }
+
+    if (argc == 3){
+        debug_mode = true;
     }
 
     std::string program_name = args[1];
@@ -50,9 +59,20 @@ int main(int argc, char* args[]){
 
     Ram memory(4096);
 
-    read_file(fin, &memory);
+    memory.zeroOut();
 
     SDLState state;
+
+    read_file(fin, &memory);
+
+    for (int i = 0; i < 32; ++i){
+        std::vector<bool> row;
+        row.clear();
+        for (int j = 0; j < 64; ++j){
+            row.push_back(false);
+        }
+        pixels.push_back(row);
+    }
 
     if (!SDL_Init(SDL_INIT_VIDEO)){
         std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl; 
@@ -75,17 +95,20 @@ int main(int argc, char* args[]){
     
     setFont(&memory);
 
-    //fetch(&memory);
-
     auto last_clock_time = std::chrono::high_resolution_clock::now();
 
     double instr_cycle_time = 0;
     double timer_cycle_time = 0;
     
+    std::map<SDL_Scancode, bool> keyState;
+
+    draw(state);
 
     //Main loop
     bool running = true;
     while (running){
+        SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 0);
+        SDL_RenderClear(state.renderer);
 
         auto current_clock_time = std::chrono::high_resolution_clock::now();
 
@@ -96,14 +119,30 @@ int main(int argc, char* args[]){
         instr_cycle_time += time_delta;
         timer_cycle_time += time_delta;
 
-        if (instr_cycle_time >= instruction_freq){
-            do_instruction();
+        if (instr_cycle_time >= instruction_freq && !debug_mode){
+            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer);
+            instr_cycle_time = 0;
+
+        }
+
+        if (timer_cycle_time >= timer_freq && !debug_mode ){
+            update_timers();
+            timer_cycle_time = 0;
+        }
+
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_PERIOD]){
+            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer);
             instr_cycle_time = 0;
         }
 
-        if (timer_cycle_time >= timer_freq){
-            update_timers();
-            timer_cycle_time = 0;
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_M]){
+            print_video_memory();
+            instr_cycle_time = 0;
+        }
+
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_P]){
+            print_data();
+            instr_cycle_time = 0;
         }
 
         SDL_Event event{0};
@@ -113,10 +152,20 @@ int main(int argc, char* args[]){
                     running = false;
                     break;
                 }
+                case SDL_EVENT_KEY_DOWN: {
+                    keyState[event.key.scancode] = true;
+                    break;
+                }
+                case SDL_EVENT_KEY_UP: {
+                    keyState[event.key.scancode] = false;
+                }
             }
         }
 
+        draw(state);
+        
         last_clock_time = current_clock_time;
+        SDL_RenderPresent(state.renderer);
     }
     
     video_cleanup(state);
@@ -130,9 +179,6 @@ void video_cleanup(SDLState &state){
     SDL_Quit();
 }
 
-void do_instruction(){
-    return ; 
-}
 
 void update_timers(){
     return ; 
@@ -202,4 +248,29 @@ void setFont(Ram* ram){
             memory_address += 1;
         }
     }
+}
+
+void print_video_memory(){
+    for (int i = 0; i < 32; ++i){
+        for (int j = 0; j < 64; ++j){
+            std::cout << pixels[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void draw(SDLState &state){
+    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+
+    for (int i = 0; i < 32; ++i){
+        for (int j = 0; j < 64; ++j){
+            //std::cout << pixels[i][j] << " ";
+            if (pixels[i][j]){
+                SDL_FRect pixel = {float(j * window_factor), float(i * window_factor), float(window_factor), float(window_factor)};
+                SDL_RenderFillRect(state.renderer, &pixel);
+            }
+        }
+        //std::cout << std::endl;
+    }
+    SDL_RenderPresent(state.renderer);
 }
