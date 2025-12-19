@@ -1,10 +1,10 @@
 #include "memory.hpp"
 #include "cpu.hpp"
 
-#include <chrono>
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
+#include <chrono>
 
 const int window_factor = 20;
 const int WINDOW_WIDTH = 64 * window_factor;
@@ -120,7 +120,7 @@ int main(int argc, char* args[]){
         timer_cycle_time += time_delta;
 
         if (instr_cycle_time >= instruction_freq && !debug_mode){
-            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer);
+            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer, debug_mode);
             instr_cycle_time = 0;
 
         }
@@ -130,19 +130,24 @@ int main(int argc, char* args[]){
             timer_cycle_time = 0;
         }
 
-        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_PERIOD]){
-            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer);
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_PERIOD]){ //Run next opcode on . press
+            decode_and_excute(&memory, pixels, keyState, delay_timer, sound_timer, debug_mode);
             instr_cycle_time = 0;
         }
 
-        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_M]){
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_M]){ //Print Video Memory on M press
             print_video_memory();
             instr_cycle_time = 0;
         }
 
-        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_P]){
-            print_data();
+        if (instr_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_P]){ //Print Register Data on P press
+            print_data(delay_timer, sound_timer);
             instr_cycle_time = 0;
+        }
+
+        if (timer_cycle_time >= 0.25 && debug_mode && keyState[SDL_SCANCODE_T]){ //Update timers on T press
+            update_timers();
+            timer_cycle_time = 0;
         }
 
         SDL_Event event{0};
@@ -181,7 +186,13 @@ void video_cleanup(SDLState &state){
 
 
 void update_timers(){
-    return ; 
+    if (delay_timer > 0x0){
+        delay_timer -= 1;
+    }
+
+    if (sound_timer > 0x0){
+        sound_timer -= 1;
+    }
 }
 
 void setFont(Ram* ram){
